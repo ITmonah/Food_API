@@ -1,0 +1,6 @@
+fastapi[all]
+sqlalchemy
+sqlalchemy_utils
+PyJWT
+passlib
+bcrypt
