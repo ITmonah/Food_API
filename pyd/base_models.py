@@ -13,8 +13,8 @@ class UserBase(BaseModel):
         orm_mode=True #наша модель будет легко соедняться с бд
 
 class RecipeBase(BaseModel):
-    id:int=Field(...,gt=0,example=228) #обязательно к заполнению
-    name:str=Field(...,example="Jin")
+    id:int=Field(...,gt=0,example=22) #обязательно к заполнению
+    name:str=Field(...,example="Мясо с морковкой")
     #face_img
     #data_of_creation
     cooking_time:int=Field(..., gt=0, example=3) #время готовки
@@ -22,7 +22,7 @@ class RecipeBase(BaseModel):
         orm_mode=True #наша модель будет легко соедняться с бд
 
 class IngredientBase(BaseModel):
-    id:int=Field(...,gt=0,example=228) #обязательно к заполнению
+    id:int=Field(...,gt=0,example=28) #обязательно к заполнению
     name:str=Field(...,example="Морковка")
     class Config:
         orm_mode=True #наша модель будет легко соедняться с бд
