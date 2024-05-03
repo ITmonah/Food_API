@@ -8,7 +8,7 @@ class RecipeScheme(RecipeBase):
     ingredient:List[IngredientBase] #связь с ингредиентами
 
 class Additional_photoScheme(Additional_photoBase):
-    recipe:RecipeBase #связь с рецептами
+    recipe_photo:RecipeBase #связь с рецептами
 
 class StepScheme(StepBase):
     recipe:RecipeBase #связь с рецептами

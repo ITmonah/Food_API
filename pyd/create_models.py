@@ -11,7 +11,7 @@ class UserCreate(BaseModel):
     #data_of_creation:=Field(...,example="20.04.2020")
 
 class RecipeCreate(BaseModel):
-    name:str=Field(...,max_length=255, min_length=1,example="Jin")
+    name:str=Field(...,max_length=255, min_length=1,example="Чизкейк")
     #face_img
     id_category:int=Field(..., gt=0, example=10)
     id_user:int=Field(..., gt=0, example=10)

@@ -21,13 +21,13 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
     #категория - одна
     category_db = db.query(models.Category).filter(models.Category.id==recipe_input.id_category).first()
     if category_db:
-        recipe_db.category=category_db
+        recipe_db.category=category_db #отношение
     else:
         raise HTTPException(status_code=404, detail="Категория не найдена!")
     #пользователь - одна
     user_db = db.query(models.User).filter(models.User.id==recipe_input.id_user).first()
     if user_db:
-        recipe_db.category=user_db
+        recipe_db.user=user_db
     else:
         raise HTTPException(status_code=404, detail="Пользователь не найден!")
     #время приёма пищи  - несколько 
@@ -44,6 +44,7 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
             recipe_db.ingredient.append(ingredient_db)
         else:
             raise HTTPException(status_code=404, detail="Ингредиент не найден!")
+    recipe_db.cooking_time=recipe_input.cooking_time
     db.add(recipe_db)
     db.commit()
     return recipe_db
@@ -81,6 +82,7 @@ async def update_recipes(recipe_id:int, recipe_input:pyd.RecipeCreate, db:Sessio
             recipe_db.ingredient.append(ingredient_db)
         else:
             raise HTTPException(status_code=404, detail="Ингредиент не найден!")
+    recipe_db.cooking_time=recipe_input.cooking_time
     db.commit()
     return recipe_db
 
@@ -157,7 +159,7 @@ async def create_categorys(category_input:pyd.CategoryCreate, db:Session=Depends
 async def update_categorys(category_id:int, category_input:pyd.CategoryBase, db:Session=Depends(get_db)):
     category_db=db.query(models.Category).filter(models.Category.id==category_id).first()
     if not category_db:
-        raise HTTPException(status_code=404, detail="Система исчисления не найдена!")
+        raise HTTPException(status_code=404, detail="Категория не найдена!")
     category_db.name=category_input.name
     db.commit()
     return category_db
@@ -169,7 +171,7 @@ async def update_categorys(category_id:int, category_input:pyd.CategoryBase, db:
 async def get_mealtimes(db:Session=Depends(get_db)):
     mealtimes=db.query(models.Mealtime).all()
     return mealtimes
-#добавление категории
+#добавление времени приёма пищи
 @app.post('/mealtimes', response_model=pyd.MealtimeBase)
 async def create_mealtimes(mealtime_input:pyd.MealtimeCreate, db:Session=Depends(get_db)):
     mealtime_db=models.Mealtime()
@@ -178,7 +180,7 @@ async def create_mealtimes(mealtime_input:pyd.MealtimeCreate, db:Session=Depends
     db.add(mealtime_db)
     db.commit()
     return mealtime_db
-#редактирование категории
+#редактирование времени приёма пищи
 @app.put('/mealtimes/{mealtime_id}', response_model=pyd.CategoryBase)
 async def update_mealtimes(mealtime_id:int, mealtime_input:pyd.CategoryBase, db:Session=Depends(get_db)):
     mealtime_db=db.query(models.Mealtime).filter(models.Mealtime.id==mealtime_id).first()
@@ -187,3 +189,42 @@ async def update_mealtimes(mealtime_id:int, mealtime_input:pyd.CategoryBase, db:
     mealtime_db.name=mealtime_input.name
     db.commit()
     return mealtime_db
+
+
+############################################################################
+
+#получение списка шагов
+@app.get('/steps', response_model=List[pyd.StepScheme])
+async def get_steps(db:Session=Depends(get_db)):
+    steps=db.query(models.Step).all()
+    return steps
+#добавление шага
+@app.post('/steps', response_model=pyd.StepScheme)
+async def create_steps(step_input:pyd.StepCreate, db:Session=Depends(get_db)):
+    step_db=models.Step()
+    step_db.number=step_input.number
+    step_db.info=step_input.info
+    #рецепт - один
+    recipe_db = db.query(models.Recipe).filter(models.Recipe.id==step_input.id_recipe).first()
+    if recipe_db:
+        step_db.recipe=recipe_db #отношение
+    else:
+        raise HTTPException(status_code=404, detail="Рецепт не найден!")
+    db.add(step_db)
+    db.commit()
+    return step_db
+#редактирование шага
+@app.put('/steps/{step_id}', response_model=pyd.StepScheme)
+async def update_steps(step_id:int, step_input:pyd.StepCreate, db:Session=Depends(get_db)):
+    step_db=db.query(models.Step).filter(models.Step.id==step_id).first()
+    if not step_db:
+        raise HTTPException(status_code=404, detail="Шаг не найден!")
+    step_db.number=step_input.number
+    step_db.info=step_input.info
+    #рецепт - один
+    recipe_db = db.query(models.Recipe).filter(models.Recipe.id==step_input.id_recipe).first()
+    if not recipe_db:
+        raise HTTPException(status_code=404, detail="Рецепт не найден!")
+    step_db.recipe=recipe_db #отношение
+    db.commit()
+    return step_db

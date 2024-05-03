@@ -77,7 +77,7 @@ class Additional_photo(Base): #дополнительные фото
     #img = Column(LargeBinary, nullable=False) #фото обязательно
     id_recipe = Column(Integer, ForeignKey("recipes.id"), nullable=False, default=2) #внешний ключ
 
-    recipe=relationship("Recipe", backref="additional_photos") #обратная связь
+    recipe_photo=relationship("Recipe", backref="additional_photos") #обратная связь
 
 class Step(Base): #шаги рецепта
     __tablename__ = "steps"
