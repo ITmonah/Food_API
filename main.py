@@ -12,7 +12,6 @@ app = FastAPI()
 async def get_recipes(db:Session=Depends(get_db)):
     recipes=db.query(models.Recipe).all()
     return recipes
-
 #добавление рецепта
 @app.post('/recipes', response_model=pyd.RecipeScheme)
 async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db)):
@@ -48,7 +47,6 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
     db.add(recipe_db)
     db.commit()
     return recipe_db
-
 #редактирование рецепта
 @app.put('/recipes/{recipe_id}', response_model=pyd.RecipeScheme)
 async def update_recipes(recipe_id:int, recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db)):
@@ -85,6 +83,19 @@ async def update_recipes(recipe_id:int, recipe_input:pyd.RecipeCreate, db:Sessio
     recipe_db.cooking_time=recipe_input.cooking_time
     db.commit()
     return recipe_db
+#удаление рецепта
+@app.delete('/recipes/{recipe_id}')
+async def delete_recipes(recipe_id:int, db:Session=Depends(get_db)):
+    recipe_db=db.query(models.Recipe).filter(models.Recipe.id==recipe_id).first()
+    if not recipe_db:
+        raise HTTPException(status_code=404, detail="Рецепт не найден!")
+    db.delete(recipe_db)
+    #удаление шагов
+    db.query(models.Step).filter(models.Step.id_recipe==recipe_id).delete()
+    #удаление дополнительных фото
+    db.query(models.Additional_photo).filter(models.Additional_photo.id_recipe==recipe_id).delete()
+    db.commit()
+    return "Удаление рецепта прошло успешно!"
 
 ############################################################################
 
@@ -111,7 +122,15 @@ async def update_ingredients(ingredient_id:int, ingredient_input:pyd.IngredientB
     ingredient_db.name=ingredient_input.name
     db.commit()
     return ingredient_db
-
+#удаление ингредиента
+@app.delete('/ingredients/{ingredient_id}')
+async def delete_ingredients(ingredient_id:int, db:Session=Depends(get_db)):
+    ingredient_db=db.query(models.Ingredient).filter(models.Ingredient.id==ingredient_id).first()
+    if not ingredient_db:
+        raise HTTPException(status_code=404, detail="Ингредиент не найден!")
+    db.delete(ingredient_db)
+    db.commit()
+    return "Удаление ингредиента прошло успешно!"
 ############################################################################
 
 #получение списка системы исчисления
@@ -137,6 +156,15 @@ async def update_system_of_calculations(system_of_calculation_id:int, system_of_
     system_of_calculation_db.name=system_of_calculation_input.name
     db.commit()
     return system_of_calculation_db
+#удаление системы исчисления
+@app.delete('/system_of_calculations/{system_of_calculation_id}')
+async def delete_system_of_calculation(system_of_calculation_id:int, db:Session=Depends(get_db)):
+    system_of_calculation_db=db.query(models.System_of_calculation).filter(models.System_of_calculation.id==system_of_calculation_id).first()
+    if not system_of_calculation_db:
+        raise HTTPException(status_code=404, detail="Система исчисления не найдена!")
+    db.delete(system_of_calculation_db)
+    db.commit()
+    return "Удаление системы исчисления прошло успешно!"
 
 ############################################################################
 
@@ -163,7 +191,17 @@ async def update_categorys(category_id:int, category_input:pyd.CategoryBase, db:
     category_db.name=category_input.name
     db.commit()
     return category_db
-
+#удаление системы исчисления
+@app.delete('/categorys/{category_id}')
+async def delete_categorys(category_id:int, db:Session=Depends(get_db)):
+    category_db=db.query(models.Category).filter(models.Category.id==category_id).first()
+    if not category_db:
+        raise HTTPException(status_code=404, detail="Категория не найдена!")
+    db.delete(category_db)
+    #удаление рецепта
+    db.query(models.Recipe).filter(models.Recipe.id_category==category_id).delete()
+    db.commit()
+    return "Удаление категории прошло успешно!"
 ############################################################################
 
 #получение списка время приёма пищи
@@ -189,7 +227,14 @@ async def update_mealtimes(mealtime_id:int, mealtime_input:pyd.CategoryBase, db:
     mealtime_db.name=mealtime_input.name
     db.commit()
     return mealtime_db
-
+@app.delete('/mealtimes/{mealtime_id}')
+async def delete_mealtimes(mealtime_id:int, db:Session=Depends(get_db)):
+    mealtime_db=db.query(models.Mealtime).filter(models.Mealtime.id==mealtime_id).first()
+    if not mealtime_db:
+        raise HTTPException(status_code=404, detail="Время приёма пищи не найдено!")
+    db.delete(mealtime_db)
+    db.commit()
+    return "Удаление времени приёма пищи прошло успешно!"
 
 ############################################################################
 
@@ -228,3 +273,12 @@ async def update_steps(step_id:int, step_input:pyd.StepCreate, db:Session=Depend
     step_db.recipe=recipe_db #отношение
     db.commit()
     return step_db
+#удаление шага
+@app.delete('/steps/{step_id}')
+async def delete_steps(step_id:int, db:Session=Depends(get_db)):
+    step_db=db.query(models.Step).filter(models.Step.id==step_id).first()
+    if not step_db:
+        raise HTTPException(status_code=404, detail="Шаг не найден!")
+    db.delete(step_db)
+    db.commit()
+    return "Удаление шага прошло успешно!"

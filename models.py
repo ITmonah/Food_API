@@ -40,6 +40,9 @@ class Recipe(Base): #рецепты
     id_user = Column(Integer, ForeignKey("users.id"), nullable=False, default=2) #внешний ключ
     #data_of_creation=Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     cooking_time=Column(Integer, nullable=False)
+    like=Column(Integer, nullable=False, default=0)
+    dizlike=Column(Integer, nullable=False,default=0)
+    views=Column(Integer, nullable=False,default=0)
 
     user=relationship("User", backref="recipes") #обратная связь
     category=relationship("Category", backref="recipes") #обратная связь

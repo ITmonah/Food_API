@@ -21,7 +21,7 @@ with Session(bind=engine) as session:
     m3=models.Mealtime(name="Ужин")
     r1=models.Recipe(name="Чизкейк", cooking_time=3, category=c3, user=u1, mealtime=[m1,m2],ingredient=[i1,i3])
     s1=models.Step(number=1, info="Потрите сыр на тёрке", recipe=r1)
-    ap1=models.Additional_photo(recipe=r1)
+    ap1=models.Additional_photo(recipe_photo=r1)
     session.add_all([u1,u2,i1,i2,i3,soc1,soc2,c1,c2,c3,m1,m2,m3,r1,s1,ap1])
     session.commit()
 
