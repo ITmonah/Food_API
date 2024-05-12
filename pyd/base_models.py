@@ -1,14 +1,14 @@
-from sqlalchemy import DateTime
-from pydantic import BaseModel, Field #настройка валидации
+from datetime import date, datetime
+from pydantic import EmailStr, BaseModel, Field #настройка валидации
 
 class UserBase(BaseModel):
     id:int=Field(...,gt=0,example=228) #обязательно к заполнению
     name:str=Field(...,example="Jin")
-    mail:str=Field(...,example="recipes228@mail.ru")
+    mail:EmailStr = Field(...,example="recipes228@mail.ru")
     #img_avatar:
-    password:str=Field(...,example="fafal1")
     mailing:bool=Field(...,example=False)
-    #data_of_creation:=Field(...,example="20.04.2020")
+    created_at:datetime=Field(...,example='2001-01-01 00:00:00')
+    email_verify:bool=Field(...)
     class Config:
         orm_mode=True #наша модель будет легко соедняться с бд
 
@@ -16,7 +16,7 @@ class RecipeBase(BaseModel):
     id:int=Field(...,gt=0,example=22) #обязательно к заполнению
     name:str=Field(...,example="Мясо с морковкой")
     #face_img
-    #data_of_creation
+    created_at:datetime=Field(...,example='2001-01-01 00:00:00')
     cooking_time:int=Field(..., gt=0, example=3) #время готовки
     like:int=Field(..., ge=0, example=3)
     dizlike:int=Field(..., ge=0, example=3)

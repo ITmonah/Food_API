@@ -7,7 +7,7 @@ models.Base.metadata.create_all(bind=engine) #пересоздание табл�
 
 with Session(bind=engine) as session:
     u1=models.User(name="Малинина", mail="recipes228@mail.ru", password="ajsdkjkf", mailing=False)
-    u2=models.User(name="Хомяк", mail="recipes228@mail.ru", password="ajsdkjkf", mailing=False)
+    u2=models.User(name="Хомяк", mail="recipes223@mail.ru", password="ajsdkjkf", mailing=False)
     i1=models.Ingredient(name="Шоколад")
     i2=models.Ingredient(name="Картошка")
     i3=models.Ingredient(name="Клубника")

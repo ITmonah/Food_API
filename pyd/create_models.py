@@ -1,21 +1,18 @@
-from pydantic import BaseModel, Field #какой формат данных хотим от пользователя
+from pydantic import EmailStr,BaseModel, Field #какой формат данных хотим от пользователя
 from typing import List
-from sqlalchemy import DateTime
 
 class UserCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Jin")
-    mail:str=Field(...,example="recipes228@mail.ru")
+    mail:EmailStr = Field(...,example="recipes228@mail.ru")
     #img_avatar:
     password:str=Field(...,max_length=255, min_length=1,example="fafal1")
     mailing:bool=Field(...,example=False)
-    #data_of_creation:=Field(...,example="20.04.2020")
 
 class RecipeCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Чизкейк")
     #face_img
     id_category:int=Field(..., gt=0, example=10)
     id_user:int=Field(..., gt=0, example=10)
-    #data_of_creation
     cooking_time:int=Field(..., gt=0, example=2) #время готовки
     id_mealtime:List[int] = None #для добавления времени приготовления через запятую
     id_ingredient:List[int] = None
