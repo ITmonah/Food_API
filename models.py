@@ -20,6 +20,13 @@ Mealtime_recipes=Table('mealtime_recipe', Base.metadata, #таблица, свя
                Column('id_mealtime', ForeignKey('mealtimes.id'), nullable=False, default=1),
                Column('id_recipe', ForeignKey('recipes.id'), nullable=False, default=1))
 
+Users_recipes=Table('user_recipe', Base.metadata, #таблица, связывающая пользователей и рецепты
+               Column('id', Integer, primary_key=True),           
+               Column('id_user', ForeignKey('users.id'), nullable=False, default=1),
+               Column('id_recipe', ForeignKey('recipes.id'), nullable=False, default=1),
+               Column('like', Integer, nullable=False, default=0),
+               Column('dizlike', Integer, nullable=False, default=0))
+
 class User(Base): #пользователи
     __tablename__ = "users"
 
@@ -46,8 +53,6 @@ class Recipe(Base): #рецепты
     created_at=Column(TIMESTAMP(timezone=False), 
                         server_default=func.now())
     cooking_time=Column(Integer, nullable=False)
-    like=Column(Integer, nullable=False, default=0)
-    dizlike=Column(Integer, nullable=False,default=0)
     views=Column(Integer, nullable=False,default=0)
 
     user=relationship("User", backref="recipes") #обратная связь

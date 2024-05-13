@@ -46,7 +46,7 @@ async def reg_user(user_input:pyd.UserCreate,db: Session = Depends(get_db)):
     user_db.email_verify_code=email_verify_token
     db.commit()
     send_email_message(user_db.mail,'Проверочное письмо для едыыыы',
-                       f'<h1>Время кушать</h1><a href="http://127.0.0.1:8000/verify/?code={email_verify_token}">Время найти еду</a>')
+                       f'<h1>Время кушать</h1><a href="http://127.0.0.1:8000/user/verify/?code={email_verify_token}">Время найти еду</a>')
     return user_db
 
 #редактирование пользователя
@@ -65,10 +65,10 @@ async def update_users(user_id:int, user_input:pyd.UserCreate, db:Session=Depend
     user_db.email_verify_code=email_verify_token
     db.commit()
     send_email_message(user_db.mail,'Проверочное письмо для едыыыы',
-                       f'<h1>Время кушать</h1><a href="http://127.0.0.1:8000/verify/?code={email_verify_token}">Время найти еду</a>')
+                       f'<h1>Время кушать</h1><a href="http://127.0.0.1:8000/user/verify/?code={email_verify_token}">Время найти еду</a>')
     return user_db
 
-#удаление категории
+#удаление пользователя
 @router.delete('/{user_id}')
 async def delete_users(user_id:int, db:Session=Depends(get_db)):
     user_db=db.query(models.User).filter(models.User.id==user_id).first()
@@ -88,4 +88,4 @@ async def verify_email(code:str,db: Session = Depends(get_db)):
     user_db.email_verify=True
     user_db.email_verify_code=None
     db.commit()
-    return RedirectResponse('https://i.ytimg.com/vi/chfgxNLlG0s/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGHIgVShDMA8=&rs=AOn4CLBiB3z1O-3Z1DQ0PAVCa2K008KFVg')
+    return RedirectResponse('http://127.0.0.1:8000')

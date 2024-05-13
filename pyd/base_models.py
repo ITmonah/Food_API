@@ -18,8 +18,6 @@ class RecipeBase(BaseModel):
     #face_img
     created_at:datetime=Field(...,example='2001-01-01 00:00:00')
     cooking_time:int=Field(..., gt=0, example=3) #время готовки
-    like:int=Field(..., ge=0, example=3)
-    dizlike:int=Field(..., ge=0, example=3)
     views:int=Field(..., ge=0, example=3)
     class Config:
         orm_mode=True #наша модель будет легко соедняться с бд
