@@ -9,6 +9,8 @@ from myemail import send_email_message
 #модули для связи бэка с фронтом
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+#модули для хэширования пароля
+import os, hashlib
 
 router = APIRouter(
     prefix="/user",
@@ -18,6 +20,13 @@ router = APIRouter(
 def randomword(length): 
    letters = string.ascii_lowercase+string.digits
    return ''.join(random.choice(letters) for i in range(length))
+
+#генерация соли для пароля
+def generate_salt():
+    return os.urandom(16)
+
+def hash_with_salt(password, salt):
+    return hashlib.sha256(salt + password.encode()).hexdigest()
 
 #получение списка пользователей
 @router.get('/', response_model=List[pyd.UserBase])
@@ -37,7 +46,9 @@ async def reg_user(user_input:pyd.UserCreate,db: Session = Depends(get_db)):
     user_db=models.User()
     user_db.name=user_input.name
     user_db.mail=user_input.mail
-    user_db.password=user_input.password
+    salt = generate_salt()
+    hashed_password = hash_with_salt(user_input.password, salt)
+    user_db.password=hashed_password
     user_db.mailing=user_input.mailing
     db.add(user_db)
     db.commit()
@@ -57,7 +68,9 @@ async def update_users(user_id:int, user_input:pyd.UserCreate, db:Session=Depend
         raise HTTPException(status_code=404, detail="Пользователь не найден!")
     user_db.name=user_input.name
     user_db.mail=user_input.mail
-    user_db.password=user_input.password
+    salt = generate_salt()
+    hashed_password = hash_with_salt(user_input.password, salt)
+    user_db.password=hashed_password
     user_db.mailing=user_input.mailing
     db.commit()
     email_verify_token=randomword(25)
