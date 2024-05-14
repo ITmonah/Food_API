@@ -11,6 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 #модули для хэширования пароля
 import os, hashlib
+#модули для JWT токена
+import auth_utils
+from config import TokenInfo
 
 router = APIRouter(
     prefix="/user",
@@ -102,3 +105,28 @@ async def verify_email(code:str,db: Session = Depends(get_db)):
     user_db.email_verify_code=None
     db.commit()
     return RedirectResponse('http://127.0.0.1:8000')
+
+def validate_auth_user():
+    pass
+
+@router.post("/login", response_model=TokenInfo)
+def auth_user_issue_jwt(user_input:pyd.UserCreate, db:Session=Depends(get_db)):
+    users_mail=db.query(models.User).filter(models.User.mail==user_input.mail).first()
+    if users_mail:
+        user_pas=db.query(models.User).filter(users_mail.password==user_input.password).first()
+        if user_pas:
+            jwt_payload = {
+                #кому это принадлежит
+                "sub": user_pas.name,
+                "username": user_pas.name,
+                "email": user_pas.mail,
+            }
+            token = auth_utils.encode_jwt(jwt_payload)
+            return TokenInfo(
+                access_token=token,
+                token_type="Bearer", #стандартный тип токена
+            )
+        else:
+            raise HTTPException(status_code=404, detail="Имя пользователя или пароль не верны!")
+    else:
+        raise HTTPException(status_code=404, detail="Имя пользователя или пароль не верны!")

@@ -59,5 +59,3 @@ class StepBase(BaseModel):
     class Config:
         orm_mode=True #наша модель будет легко соедняться с бд
 
-
-
