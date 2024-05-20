@@ -5,7 +5,7 @@ class UserCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Jin")
     mail:EmailStr = Field(...,example="recipes228@mail.ru")
     #img_avatar:
-    password:str=Field(...,max_length=255, min_length=1,example="fafal1")
+    password:str=Field(...,max_length=255, min_length=6,example="fafal1")
     mailing:bool=Field(...,example=False)
 
 class RecipeCreate(BaseModel):
@@ -39,3 +39,6 @@ class StepCreate(BaseModel):
     info:str=Field(...,max_length=255, min_length=1,example="Порезать колабсу и сыр на кубики.")
     id_recipe:int=Field(...,gt=0,example=1)
 
+class Credentials(BaseModel):
+    mail: EmailStr = Field(..., example='recipes221@mail.ru')
+    pwd: str = Field(..., max_length=255, min_length=6, example='123456')
