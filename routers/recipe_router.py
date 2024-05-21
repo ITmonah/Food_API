@@ -4,6 +4,10 @@ from typing import List
 import models
 from database import get_db
 import pyd
+import upload_file
+#модули для JWT токена
+import auth_utils
+from config import TokenInfo
 
 router = APIRouter(
     prefix="/recipe",
@@ -18,9 +22,10 @@ async def get_recipes(db:Session=Depends(get_db)):
 
 #добавление рецепта
 @router.post('/', response_model=pyd.RecipeScheme)
-async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db)):
+async def create_recipes(url:str= Depends(upload_file.save_file),recipe_input:pyd.RecipeCreate=Depends(), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     recipe_db=models.Recipe()
     recipe_db.name=recipe_input.name
+    recipe_db.face_img=url
     #категория - одна
     category_db = db.query(models.Category).filter(models.Category.id==recipe_input.id_category).first()
     if category_db:
@@ -54,11 +59,12 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
 
 #редактирование рецепта
 @router.put('/{recipe_id}', response_model=pyd.RecipeScheme)
-async def update_recipes(recipe_id:int, recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db)):
+async def update_recipes(recipe_id:int, url:str= Depends(upload_file.save_file),recipe_input:pyd.RecipeCreate=Depends(), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     recipe_db=db.query(models.Recipe).filter(models.Recipe.id==recipe_id).first()
     if not recipe_db:
         raise HTTPException(status_code=404, detail="Рецепт не найден!")
     recipe_db.name=recipe_input.name
+    recipe_db.face_img=url
     #категория - одна
     category_db = db.query(models.Category).filter(models.Category.id==recipe_input.id_category).first()
     if not category_db:
@@ -91,7 +97,7 @@ async def update_recipes(recipe_id:int, recipe_input:pyd.RecipeCreate, db:Sessio
 
 #удаление рецепта
 @router.delete('/{recipe_id}')
-async def delete_recipes(recipe_id:int, db:Session=Depends(get_db)):
+async def delete_recipes(recipe_id:int, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     recipe_db=db.query(models.Recipe).filter(models.Recipe.id==recipe_id).first()
     if not recipe_db:
         raise HTTPException(status_code=404, detail="Рецепт не найден!")

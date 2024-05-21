@@ -4,6 +4,9 @@ from typing import List
 import models
 from database import get_db
 import pyd
+#модули для JWT токена
+import auth_utils
+from config import TokenInfo
 
 router = APIRouter(
     prefix="/system_of_calculation",
@@ -18,7 +21,7 @@ async def get_system_of_calculations(db:Session=Depends(get_db)):
 
 #добавление системы исчисления
 @router.post('/', response_model=pyd.System_of_calculationBase)
-async def create_system_of_calculations(system_of_calculation_input:pyd.System_of_calculationCreate, db:Session=Depends(get_db)):
+async def create_system_of_calculations(system_of_calculation_input:pyd.System_of_calculationCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     system_of_calculation_db=models.System_of_calculation()
     system_of_calculation_db.name=system_of_calculation_input.name
 
@@ -28,7 +31,7 @@ async def create_system_of_calculations(system_of_calculation_input:pyd.System_o
 
 #редактирование системы исчисления
 @router.put('/{system_of_calculation_id}', response_model=pyd.System_of_calculationBase)
-async def update_system_of_calculations(system_of_calculation_id:int, system_of_calculation_input:pyd.System_of_calculationBase, db:Session=Depends(get_db)):
+async def update_system_of_calculations(system_of_calculation_id:int, system_of_calculation_input:pyd.System_of_calculationBase, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     system_of_calculation_db=db.query(models.System_of_calculation).filter(models.System_of_calculation.id==system_of_calculation_id).first()
     if not system_of_calculation_db:
         raise HTTPException(status_code=404, detail="Система исчисления не найдена!")
@@ -38,7 +41,7 @@ async def update_system_of_calculations(system_of_calculation_id:int, system_of_
 
 #удаление системы исчисления
 @router.delete('/{system_of_calculation_id}')
-async def delete_system_of_calculation(system_of_calculation_id:int, db:Session=Depends(get_db)):
+async def delete_system_of_calculation(system_of_calculation_id:int, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     system_of_calculation_db=db.query(models.System_of_calculation).filter(models.System_of_calculation.id==system_of_calculation_id).first()
     if not system_of_calculation_db:
         raise HTTPException(status_code=404, detail="Система исчисления не найдена!")

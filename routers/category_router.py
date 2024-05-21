@@ -4,6 +4,9 @@ from typing import List
 import models
 from database import get_db
 import pyd
+#модули для JWT токена
+import auth_utils
+from config import TokenInfo
 
 router = APIRouter(
     prefix="/category",
@@ -18,7 +21,7 @@ async def get_categorys(db:Session=Depends(get_db)):
 
 #добавление категории
 @router.post('/', response_model=pyd.CategoryBase)
-async def create_categorys(category_input:pyd.CategoryCreate, db:Session=Depends(get_db)):
+async def create_categorys(category_input:pyd.CategoryCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     category_db=models.Category()
     category_db.name=category_input.name
 
@@ -28,7 +31,7 @@ async def create_categorys(category_input:pyd.CategoryCreate, db:Session=Depends
 
 #редактирование категории
 @router.put('/{category_id}', response_model=pyd.CategoryBase)
-async def update_categorys(category_id:int, category_input:pyd.CategoryBase, db:Session=Depends(get_db)):
+async def update_categorys(category_id:int, category_input:pyd.CategoryBase, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     category_db=db.query(models.Category).filter(models.Category.id==category_id).first()
     if not category_db:
         raise HTTPException(status_code=404, detail="Категория не найдена!")
@@ -38,7 +41,7 @@ async def update_categorys(category_id:int, category_input:pyd.CategoryBase, db:
 
 #удаление категории
 @router.delete('/{category_id}')
-async def delete_categorys(category_id:int, db:Session=Depends(get_db)):
+async def delete_categorys(category_id:int, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     category_db=db.query(models.Category).filter(models.Category.id==category_id).first()
     if not category_db:
         raise HTTPException(status_code=404, detail="Категория не найдена!")

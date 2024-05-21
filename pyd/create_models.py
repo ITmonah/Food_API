@@ -1,16 +1,16 @@
-from pydantic import EmailStr,BaseModel, Field #какой формат данных хотим от пользователя
+from pydantic import EmailStr,BaseModel, Field, FileUrl #какой формат данных хотим от пользователя
 from typing import List
 
 class UserCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Jin")
     mail:EmailStr = Field(...,example="recipes228@mail.ru")
-    #img_avatar:
+    #img_avatar:str=Field(...,example="files/hh.png")
     password:str=Field(...,max_length=255, min_length=6,example="fafal1")
     mailing:bool=Field(...,example=False)
 
 class RecipeCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Чизкейк")
-    #face_img
+    #face_img:str=Field(...,example="files/hh.png")
     id_category:int=Field(..., gt=0, example=10)
     id_user:int=Field(..., gt=0, example=10)
     cooking_time:int=Field(..., gt=0, example=2) #время готовки

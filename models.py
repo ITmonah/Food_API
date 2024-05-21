@@ -1,7 +1,7 @@
 from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, TIMESTAMP, DateTime,LargeBinary
 from sqlalchemy.orm import relationship #связь между таблицами
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy_utils import EmailType
+from sqlalchemy_utils import EmailType, URLType
 from sqlalchemy.sql import func
 
 #from sqlalchemy_imageattach.entity import Image, image_attachment #библиотека для изображений
@@ -33,7 +33,7 @@ class User(Base): #пользователи
     id = Column(Integer, primary_key=True) #первичный ключ
     name = Column(String(255), nullable=False, unique=True)
     mail = Column(EmailType, nullable=False, unique=True)
-    #img_avatar = Column(LargeBinary, nullable=True) #фото может не быть
+    img_avatar = Column(String(255), nullable=True) #фото может не быть
     password = Column(String(255), nullable=False)
     mailing = Column(Boolean, default=False)
     created_at=Column(TIMESTAMP(timezone=False), 
@@ -47,7 +47,7 @@ class Recipe(Base): #рецепты
 
     id = Column(Integer, primary_key=True) #первичный ключ
     name = Column(String(255), nullable=False)
-    #face_img = Column(LargeBinary, nullable=False) #фото обязательно
+    face_img = Column(String(255), nullable=False) #фото обязательно
     id_category = Column(Integer, ForeignKey("categories.id"), nullable=False, default=1) #внешний ключ
     id_user = Column(Integer, ForeignKey("users.id"), nullable=False, default=1) #внешний ключ
     created_at=Column(TIMESTAMP(timezone=False), 
@@ -88,7 +88,7 @@ class Additional_photo(Base): #дополнительные фото
     __tablename__ = "additional_photos"
 
     id = Column(Integer, primary_key=True) #первичный ключ
-    #img = Column(LargeBinary, nullable=False) #фото обязательно
+    img = Column(String(255), nullable=False) #фото обязательно
     id_recipe = Column(Integer, ForeignKey("recipes.id"), nullable=False, default=1) #внешний ключ
 
     recipe_photo=relationship("Recipe", backref="additional_photos") #обратная связь

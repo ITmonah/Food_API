@@ -4,6 +4,9 @@ from typing import List
 import models
 from database import get_db
 import pyd
+#модули для JWT токена
+import auth_utils
+from config import TokenInfo
 
 router = APIRouter(
     prefix="/step",
@@ -18,7 +21,7 @@ async def get_steps(db:Session=Depends(get_db)):
 
 #добавление шага
 @router.post('/', response_model=pyd.StepScheme)
-async def create_steps(step_input:pyd.StepCreate, db:Session=Depends(get_db)):
+async def create_steps(step_input:pyd.StepCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     step_db=models.Step()
     step_db.number=step_input.number
     step_db.info=step_input.info
@@ -34,7 +37,7 @@ async def create_steps(step_input:pyd.StepCreate, db:Session=Depends(get_db)):
 
 #редактирование шага
 @router.put('/{step_id}', response_model=pyd.StepScheme)
-async def update_steps(step_id:int, step_input:pyd.StepCreate, db:Session=Depends(get_db)):
+async def update_steps(step_id:int, step_input:pyd.StepCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     step_db=db.query(models.Step).filter(models.Step.id==step_id).first()
     if not step_db:
         raise HTTPException(status_code=404, detail="Шаг не найден!")
@@ -50,7 +53,7 @@ async def update_steps(step_id:int, step_input:pyd.StepCreate, db:Session=Depend
 
 #удаление шага
 @router.delete('/{step_id}')
-async def delete_steps(step_id:int, db:Session=Depends(get_db)):
+async def delete_steps(step_id:int, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     step_db=db.query(models.Step).filter(models.Step.id==step_id).first()
     if not step_db:
         raise HTTPException(status_code=404, detail="Шаг не найден!")

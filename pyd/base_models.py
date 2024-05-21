@@ -1,11 +1,11 @@
 from datetime import date, datetime
-from pydantic import EmailStr, BaseModel, Field #настройка валидации
+from pydantic import EmailStr, BaseModel, Field,FileUrl #настройка валидации
 
 class UserBase(BaseModel):
     id:int=Field(...,gt=0,example=228) #обязательно к заполнению
     name:str=Field(...,example="Jin")
     mail:EmailStr = Field(...,example="recipes228@mail.ru")
-    #img_avatar:
+    img_avatar:str=Field(...,example="files/hh.png")
     mailing:bool=Field(...,example=False)
     created_at:datetime=Field(...,example='2001-01-01 00:00:00')
     email_verify:bool=Field(...)
@@ -15,7 +15,7 @@ class UserBase(BaseModel):
 class RecipeBase(BaseModel):
     id:int=Field(...,gt=0,example=22) #обязательно к заполнению
     name:str=Field(...,example="Мясо с морковкой")
-    #face_img
+    face_img:str=Field(...,example="files/hh.png")
     created_at:datetime=Field(...,example='2001-01-01 00:00:00')
     cooking_time:int=Field(..., gt=0, example=3) #время готовки
     views:int=Field(..., ge=0, example=3)
@@ -48,7 +48,7 @@ class MealtimeBase(BaseModel):
 
 class Additional_photoBase(BaseModel):
     id:int=Field(...,gt=0,example=228) #обязательно к заполнению
-    #img
+    img:str=Field(...,example="files/hh.png")
     class Config:
         orm_mode=True #наша модель будет легко соедняться с бд
 

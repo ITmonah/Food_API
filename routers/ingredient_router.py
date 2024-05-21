@@ -4,6 +4,9 @@ from typing import List
 import models
 from database import get_db
 import pyd
+#модули для JWT токена
+import auth_utils
+from config import TokenInfo
 
 router = APIRouter(
     prefix="/ingredient",
@@ -18,17 +21,16 @@ async def get_ingredients(db:Session=Depends(get_db)):
 
 #добавление ингредиента
 @router.post('/', response_model=pyd.IngredientBase)
-async def create_ingredients(ingredient_input:pyd.IngredientCreate, db:Session=Depends(get_db)):
+async def create_ingredients(ingredient_input:pyd.IngredientCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     ingredient_db=models.Ingredient()
     ingredient_db.name=ingredient_input.name
-
     db.add(ingredient_db)
     db.commit()
     return ingredient_db
 
 #редактирование ингредиента
 @router.put('/{ingredient_id}', response_model=pyd.IngredientBase)
-async def update_ingredients(ingredient_id:int, ingredient_input:pyd.IngredientBase, db:Session=Depends(get_db)):
+async def update_ingredients(ingredient_id:int, ingredient_input:pyd.IngredientBase, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     ingredient_db=db.query(models.Ingredient).filter(models.Ingredient.id==ingredient_id).first()
     if not ingredient_db:
         raise HTTPException(status_code=404, detail="Ингредиент не найден!")
@@ -38,7 +40,7 @@ async def update_ingredients(ingredient_id:int, ingredient_input:pyd.IngredientB
 
 #удаление ингредиента
 @router.delete('/{ingredient_id}')
-async def delete_ingredients(ingredient_id:int, db:Session=Depends(get_db)):
+async def delete_ingredients(ingredient_id:int, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     ingredient_db=db.query(models.Ingredient).filter(models.Ingredient.id==ingredient_id).first()
     if not ingredient_db:
         raise HTTPException(status_code=404, detail="Ингредиент не найден!")
