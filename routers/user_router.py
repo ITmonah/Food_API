@@ -32,6 +32,14 @@ def randomword(length):
    letters = string.ascii_lowercase+string.digits
    return ''.join(random.choice(letters) for i in range(length))
 
+#получение пользователя
+def get_current_auth_user(payload:dict=Depends(auth_utils.auth_wrapper), db:Session=Depends(get_db)):
+    username:str | None = payload.get("sub")
+    users_db=db.query(models.User).filter(models.User.name==username).first()
+    if users_db: #вытаскиваем пользователя из бд
+        return users_db
+    raise HTTPException(status_code=401, detail="Токен не найден")
+
 #получение списка пользователей
 @router.get('/', response_model=List[pyd.UserBase])
 async def get_users(db:Session=Depends(get_db)):
@@ -40,7 +48,7 @@ async def get_users(db:Session=Depends(get_db)):
 
 #добавление пользователя (регистрация)
 @router.post('/reg', response_model=pyd.UserBase)
-async def reg_user(url:str= Depends(upload_file.save_file),user_input:pyd.UserCreate=Depends(), db: Session = Depends(get_db)):
+async def reg_user(user_input:pyd.UserCreate, db: Session = Depends(get_db)):
     user_db=db.query(models.User).filter(models.User.mail==user_input.mail).first()
     user_db_2=db.query(models.User).filter(models.User.name==user_input.name).first()
     if user_db:
@@ -51,8 +59,6 @@ async def reg_user(url:str= Depends(upload_file.save_file),user_input:pyd.UserCr
     user_db.name=user_input.name
     user_db.mail=user_input.mail
     user_db.password = auth_utils.get_password_hash(user_input.password)
-    user_db.img_avatar=url
-    user_db.mailing=user_input.mailing
     db.add(user_db)
     db.commit()
     email_verify_token=randomword(25)
@@ -63,23 +69,30 @@ async def reg_user(url:str= Depends(upload_file.save_file),user_input:pyd.UserCr
                        f'<h1>Время кушать</h1><a href="http://127.0.0.1:8000/user/verify/?code={email_verify_token}">Время найти еду</a>')
     return user_db
 
-#редактирование пользователя
-@router.put('/{user_id}', response_model=pyd.UserBase)
-async def update_users(user_id:int, url:str= Depends(upload_file.save_file),user_input:pyd.UserCreate=Depends(), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
-    user_db=db.query(models.User).filter(models.User.id==user_id).first()
+#редактирование фото пользователя
+@router.put('/my_profile_img', response_model=pyd.UserBase)
+async def update_users_img(url:str= Depends(upload_file.save_file),user:pyd.UserBase=Depends(get_current_auth_user), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db=db.query(models.User).filter(models.User.name==user.name).first()
+    user_db.img_avatar=url
+    db.commit()
+    return user_db
+
+#редактирование почты пользователя
+@router.put('/my_profile_mail', response_model=pyd.UserBase)
+async def update_users_mail(user_input:pyd.UserEditingMail,user:pyd.UserBase=Depends(get_current_auth_user), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db=db.query(models.User).filter(models.User.name==user.name).first()
     if not user_db:
         raise HTTPException(status_code=404, detail="Пользователь не найден!")
-    user_db_1=db.query(models.User).filter(models.User.mail==user_input.mail).first()
-    user_db_2=db.query(models.User).filter(models.User.name==user_input.name).first()
-    if user_db_1:
-        raise HTTPException(400, 'Email занят')
-    if user_db_2:
-        raise HTTPException(400, 'Никнейм занят')
-    user_db.name=user_input.name
+    user_input=db.query(models.User).filter(models.User.mail==user_input.mail).first() #ввёл почту
+    user_db_1=db.query(models.User).where(models.User.mail==user.mail).first() #почта в дб равна почте пользователя, что сейчас зарегистрировался
+    """if user_nn.mail and user_nn.mail != user_db_1.mail:
+        raise HTTPException(400, 'Email занят')"""
+    if user_input:
+        if user_db.mail == user_input.mail:
+            raise HTTPException(400, 'Ваша почта осталась вашей почтой!')
+        if user_input.mail and user_input.mail != user_db_1.mail:
+            raise HTTPException(400, 'Email занят')
     user_db.mail=user_input.mail
-    user_db.password = auth_utils.get_password_hash(user_input.password)
-    user_db.img_avatar=url
-    user_db.mailing=user_input.mailing
     db.commit()
     email_verify_token=randomword(25)
     email_verify_token+=str(user_db.id)
@@ -89,15 +102,31 @@ async def update_users(user_id:int, url:str= Depends(upload_file.save_file),user
                        f'<h1>Время кушать</h1><a href="http://127.0.0.1:8000/user/verify/?code={email_verify_token}">Время найти еду</a>')
     return user_db
 
+#редактирование пароля пользователя
+@router.put('/my_profile_pass', response_model=pyd.UserBase)
+async def update_users_pass(user_input:pyd.UserEditingPass,user:pyd.UserBase=Depends(get_current_auth_user), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db=db.query(models.User).filter(models.User.name==user.name).first()
+    user_db.password = auth_utils.get_password_hash(user_input.password)
+    db.commit()
+    return user_db
+
+#редактирование рассылки пользователя
+@router.put('/my_profile_maling', response_model=pyd.UserBase)
+async def update_users_maling(user_input:pyd.UserEditingMailing,user:pyd.UserBase=Depends(get_current_auth_user), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db=db.query(models.User).filter(models.User.name==user.name).first()
+    user_db.mailing=user_input.mailing
+    db.commit()
+    return user_db
+
 #удаление пользователя
-@router.delete('/{user_id}')
-async def delete_users(user_id:int, db:Session=Depends(get_db),user=Depends(auth_utils.auth_wrapper),payload:dict=Depends(auth_utils.auth_wrapper)):
-    user_db=db.query(models.User).filter(models.User.id==user_id).first()
+@router.delete('/my_profile_delete')
+async def delete_users(db:Session=Depends(get_db),user:pyd.UserBase=Depends(get_current_auth_user),payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db=db.query(models.User).filter(models.User.name==user.name).first()
     if not user_db:
         raise HTTPException(status_code=404, detail="Пользователь не найден!")
     db.delete(user_db)
     #удаление рецепта
-    db.query(models.Recipe).filter(models.Recipe.id_user==user_id).delete()
+    db.query(models.Recipe).filter(models.Recipe.id_user==user_db.id).delete()
     db.commit()
     return "Удаление пользователя прошло успешно!"
 
@@ -146,14 +175,6 @@ def auth_user_issue_jwt(cred: pyd.Credentials, db:Session=Depends(get_db)):
     except InvalidTokenError as e:
         raise HTTPException(status_code=401, detail=f"Токен неверен!: {e}")
     return payload"""
-
-#получение пользователя
-def get_current_auth_user(payload:dict=Depends(auth_utils.auth_wrapper), db:Session=Depends(get_db)):
-    username:str | None = payload.get("sub")
-    users_db=db.query(models.User).filter(models.User.name==username).first()
-    if users_db: #вытаскиваем пользователя из бд
-        return users_db
-    raise HTTPException(status_code=401, detail="Токен не найден")
 
 #проверка пользователя на активность
 #def get_current_active_auth_user(user:pyd.UserBase=Depends(get_current_auth_user)):

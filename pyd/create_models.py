@@ -4,9 +4,19 @@ from typing import List
 class UserCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Jin")
     mail:EmailStr = Field(...,example="recipes228@mail.ru")
-    #img_avatar:str=Field(...,example="files/hh.png")
     password:str=Field(...,max_length=255, min_length=6,example="fafal1")
+
+class UserEditingImg(BaseModel): #класс для редактирования фото пользователя
+    img_avatar:str=Field(...,example="files/hh.png")
+
+class UserEditingMail(BaseModel): #класс для редактирования почты пользователя
+    mail:EmailStr = Field(...,example="recipes228@mail.ru")
+
+class UserEditingMailing(BaseModel): #класс для редактирования рассылки пользователя
     mailing:bool=Field(...,example=False)
+
+class UserEditingPass(BaseModel): #класс для редактирования пароля пользователя
+    password:str=Field(...,max_length=255, min_length=6,example="fafal1")
 
 class RecipeCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Чизкейк")

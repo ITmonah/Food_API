@@ -33,9 +33,9 @@ class User(Base): #пользователи
     id = Column(Integer, primary_key=True) #первичный ключ
     name = Column(String(255), nullable=False, unique=True)
     mail = Column(EmailType, nullable=False, unique=True)
-    img_avatar = Column(String(255), nullable=True) #фото может не быть
+    img_avatar = Column(String(255), nullable=False, default="files/hh.png") #фото по умолчанию есть всегда
     password = Column(String(255), nullable=False)
-    mailing = Column(Boolean, default=False)
+    mailing = Column(Boolean, nullable=False, default=False)
     created_at=Column(TIMESTAMP(timezone=False), 
                         server_default=func.now())
     email_verify=Column(Boolean(),nullable=False,
