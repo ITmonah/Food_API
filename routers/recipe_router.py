@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from pathlib import Path
+from fastapi.responses import FileResponse
 #joinedload - подходит для многие к одному, один к одному
 # - многие ко многим, один ко многим
 from sqlalchemy import and_, text, insert, select, func, cast, or_
@@ -29,6 +31,13 @@ async def get_recipes(db:Session=Depends(get_db)):
     ress=res.scalars().all()
     return ress
 
+@router.get("/files/{img_name}")
+async def get_image(img_name:str,db:Session=Depends(get_db)):
+    image_path = Path(f"files/{img_name}")
+    if not image_path.is_file():
+        return {"error": "Image not found on the server"}
+    return FileResponse(image_path)
+
 #выводятся только те рецепты, где есть шаги
 """@router.get('/', response_model=List[pyd.RecipeScheme])
 async def get_recipes(db:Session=Depends(get_db)):
@@ -43,10 +52,10 @@ async def get_recipes(db:Session=Depends(get_db)):
 
 #добавление рецепта
 @router.post('/')
-async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db)):
+async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db), payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db = db.query(models.User).filter(models.User.name==payload.get("username")).first() #находим зарегестрированного сейчас пользователя
     recipe_db=models.Recipe()
     recipe_db.name=recipe_input.name
-    #recipe_db.face_img=url
     #категория - одна
     category_db = db.query(models.Category).filter(models.Category.id==recipe_input.id_category).first()
     if category_db:
@@ -54,11 +63,7 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
     else:
         raise HTTPException(status_code=404, detail="Категория не найдена!")
     #пользователь - одна
-    user_db = db.query(models.User).filter(models.User.id==recipe_input.id_user).first()
-    if user_db:
-        recipe_db.user=user_db
-    else:
-        raise HTTPException(status_code=404, detail="Пользователь не найден!")
+    recipe_db.user=user_db
     #время приёма пищи  - несколько 
     for id_mealtime in recipe_input.id_mealtime:
         mealtime_db = db.query(models.Mealtime).filter(models.Mealtime.id==id_mealtime).first()

@@ -22,7 +22,7 @@ class RecipeCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Чизкейк")
     #face_img:str=Field(...,example="files/hh.png")
     id_category:int=Field(..., gt=0, example=10)
-    id_user:int=Field(..., gt=0, example=10)
+    #id_user:int=Field(..., gt=0, example=10)
     cooking_time:int=Field(..., gt=0, example=2) #время готовки
     id_mealtime:List[int] = None #для добавления времени приготовления через запятую
     id_ingredient:List[int] = None
@@ -49,8 +49,8 @@ class Additional_photoCreate(BaseModel):
 
 class StepCreate(BaseModel):
     number:int=Field(...,gt=0,example=2)
-    info:str=Field(...,max_length=255, min_length=1,example="Порезать колабсу и сыр на кубики.")
-    id_recipe:int=Field(...,gt=0,example=1)
+    info:str=Field(...,max_length=255, min_length=1,example="Порезать колбасу и сыр на кубики.")
+    #id_recipe:int=Field(...,gt=0,example=1)
 
 class Credentials(BaseModel):
     mail: EmailStr = Field(..., example='recipes221@mail.ru')

@@ -21,17 +21,15 @@ async def get_steps(db:Session=Depends(get_db)):
 
 #добавление шага
 @router.post('/', response_model=pyd.StepScheme)
-async def create_steps(step_input:pyd.StepCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+async def create_steps(step_input:List[pyd.StepCreate], db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db = db.query(models.User).filter(models.User.name==payload.get("username")).first() #получаем пользователя
+    recipe_db = db.query(models.Recipe).filter(models.Recipe.id_user==user_db.id).order_by(models.Recipe.created_at.desc()).first() #находим рецепт, принадлежащий пользователю
     step_db=models.Step()
-    step_db.number=step_input.number
-    step_db.info=step_input.info
-    #рецепт - один
-    recipe_db = db.query(models.Recipe).filter(models.Recipe.id==step_input.id_recipe).first()
-    if recipe_db:
-        step_db.recipe=recipe_db #отношение
-    else:
-        raise HTTPException(status_code=404, detail="Рецепт не найден!")
-    db.add(step_db)
+    for step in step_input:
+        step_db.number=step.number
+        step_db.info=step.info
+        step_db.recipe=recipe_db
+        db.add(step_db)
     db.commit()
     return step_db
 
