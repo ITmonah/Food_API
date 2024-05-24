@@ -24,7 +24,6 @@ async def get_system_of_calculations(db:Session=Depends(get_db)):
 async def create_system_of_calculations(system_of_calculation_input:pyd.System_of_calculationCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     system_of_calculation_db=models.System_of_calculation()
     system_of_calculation_db.name=system_of_calculation_input.name
-
     db.add(system_of_calculation_db)
     db.commit()
     return system_of_calculation_db

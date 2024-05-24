@@ -63,7 +63,7 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
     else:
         raise HTTPException(status_code=404, detail="Категория не найдена!")
     #пользователь - одна
-    recipe_db.user=user_db
+    recipe_db.user=user_db #обращение конкретно к отношению
     #время приёма пищи  - несколько 
     for id_mealtime in recipe_input.id_mealtime:
         mealtime_db = db.query(models.Mealtime).filter(models.Mealtime.id==id_mealtime).first()
@@ -83,6 +83,16 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
     db.add(recipe_db)
     db.commit()
     return "Рецепт отправлен модератору!"
+
+#добавление главного изображения рецепту
+@router.post('/img', response_model=pyd.RecipeScheme)
+async def create_photos(url:str= Depends(upload_file.save_file), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+    user_db = db.query(models.User).filter(models.User.name==payload.get("username")).first() #получаем пользователя
+    recipe_db = db.query(models.Recipe).filter(models.Recipe.id_user==user_db.id).order_by(models.Recipe.created_at.desc()).first() #находим рецепт, принадлежащий пользователю
+    print(url)
+    recipe_db.face_img=url
+    db.commit()
+    return recipe_db
 
 #редактирование рецепта
 @router.put('/{recipe_id}', response_model=pyd.RecipeScheme)

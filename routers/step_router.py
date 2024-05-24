@@ -24,13 +24,14 @@ async def get_steps(db:Session=Depends(get_db)):
 async def create_steps(step_input:List[pyd.StepCreate], db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     user_db = db.query(models.User).filter(models.User.name==payload.get("username")).first() #получаем пользователя
     recipe_db = db.query(models.Recipe).filter(models.Recipe.id_user==user_db.id).order_by(models.Recipe.created_at.desc()).first() #находим рецепт, принадлежащий пользователю
-    step_db=models.Step()
     for step in step_input:
-        step_db.number=step.number
+        step_db=models.Step()
+        step_db.number=(step_input.index(step)) + 1
+        #step_db.number=step.number
         step_db.info=step.info
         step_db.recipe=recipe_db
         db.add(step_db)
-    db.commit()
+        db.commit()
     return step_db
 
 #редактирование шага

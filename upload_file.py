@@ -9,14 +9,16 @@ def save_file(file: UploadFile):
         raise HTTPException(400)
     #if file.size > 100000;
     # raise HTTPException(400)
-    with open(f'http://127.0.0.1:8000/files/{file.filename}', 'wb') as f:
+    print(file)
+    print(file.filename)
+    with open(f'files/{file.filename}', 'wb') as f:
         f.write(file.file.read())
-    url = str(f'files/{file.filename}')
+    url = str(f'http://127.0.0.1:8000/recipe/files/{file.filename}')
     return url
 
 
 def getim(filename):
-    if os.path.exists(f'http://127.0.0.1:8000/files/{filename}'):
-        return FileResponse(f'http://127.0.0.1:8000/files/{filename}')
+    if os.path.exists(f'http://127.0.0.1:8000/recipe/files/{filename}'):
+        return FileResponse(f'http://127.0.0.1:8000/recipe/files/{filename}')
     else: 
         return "Изображение отсутствует!"

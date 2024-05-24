@@ -24,7 +24,6 @@ async def get_categorys(db:Session=Depends(get_db)):
 async def create_categorys(category_input:pyd.CategoryCreate, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     category_db=models.Category()
     category_db.name=category_input.name
-
     db.add(category_db)
     db.commit()
     return category_db

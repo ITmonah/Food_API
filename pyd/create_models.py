@@ -43,12 +43,13 @@ class MealtimeCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Ужин")
 
 class Additional_photoCreate(BaseModel):
-    id:int=Field(...,gt=0,example=228) #обязательно к заполнению
+    #id:int=Field(...,gt=0,example=228) #обязательно к заполнению
     #img
-    id_recipe:int=Field(...,gt=0,example=1)
+    #id_recipe:int=Field(...,gt=0,example=1)
+    pass
 
 class StepCreate(BaseModel):
-    number:int=Field(...,gt=0,example=2)
+    #number:int=Field(...,gt=0,example=2)
     info:str=Field(...,max_length=255, min_length=1,example="Порезать колбасу и сыр на кубики.")
     #id_recipe:int=Field(...,gt=0,example=1)
 
