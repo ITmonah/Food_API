@@ -1,5 +1,5 @@
 from pydantic import EmailStr,BaseModel, Field, FileUrl #какой формат данных хотим от пользователя
-from typing import List
+from typing import List, Dict
 
 class UserCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Jin")
@@ -32,6 +32,9 @@ class IngredientCreate(BaseModel):
 
 class System_of_calculationCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Кг")
+
+class Count(BaseModel):
+    count:int=Field(..., gt=0, example=10)
 
 class CategoryCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Десерт")

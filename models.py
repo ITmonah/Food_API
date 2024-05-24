@@ -1,5 +1,5 @@
-from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, TIMESTAMP, DateTime,LargeBinary
-from sqlalchemy.orm import relationship #связь между таблицами
+from sqlalchemy import Table, Boolean, Column, ForeignKey, Integer, String, TIMESTAMP, DateTime, LargeBinary
+from sqlalchemy.orm import Mapped, mapped_column, relationship #связь между таблицами
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import EmailType, URLType
 from sqlalchemy.sql import func
@@ -42,14 +42,16 @@ class User(Base): #пользователи
                         default=False)
     email_verify_code=Column(String(255), nullable=True, unique=True)
 
+    recipe=relationship("Recipe",  secondary='user_recipe', backref="users") #обратная связь
+
 class Recipe(Base): #рецепты
     __tablename__ = "recipes"
 
     id = Column(Integer, primary_key=True) #первичный ключ
     name = Column(String(255), nullable=False)
-    face_img = Column(String(255), nullable=False) #фото обязательно
-    id_category = Column(Integer, ForeignKey("categories.id"), nullable=False, default=1) #внешний ключ
-    id_user = Column(Integer, ForeignKey("users.id"), nullable=False, default=1) #внешний ключ
+    face_img = Column(String(255), nullable=False, default="files/hh.png") #фото обязательно
+    id_category = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"), nullable=False, default=1) #внешний ключ
+    id_user = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, default=1) #внешний ключ
     created_at=Column(TIMESTAMP(timezone=False), 
                         server_default=func.now())
     cooking_time=Column(Integer, nullable=False)
@@ -59,6 +61,12 @@ class Recipe(Base): #рецепты
     category=relationship("Category", backref="recipes") #обратная связь
     mealtime=relationship("Mealtime", secondary='mealtime_recipe', backref='recipes') #время приготовления
     ingredient=relationship("Ingredient", secondary='ingredient_recipe', backref='recipes') #ингредиенты
+
+    steps: Mapped[list["Step"]]  = relationship(
+        #back_populates="recipes",
+        primaryjoin="and_(Recipe.id == Step.id_recipe)",
+        #order_by="Step.number.desc()"
+        )
 
 class Ingredient(Base): #ингредиенты
     __tablename__ = "ingredients"
@@ -89,7 +97,7 @@ class Additional_photo(Base): #дополнительные фото
 
     id = Column(Integer, primary_key=True) #первичный ключ
     img = Column(String(255), nullable=False) #фото обязательно
-    id_recipe = Column(Integer, ForeignKey("recipes.id"), nullable=False, default=1) #внешний ключ
+    id_recipe = Column(Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False, default=1) #внешний ключ
 
     recipe_photo=relationship("Recipe", backref="additional_photos") #обратная связь
 
@@ -99,7 +107,7 @@ class Step(Base): #шаги рецепта
     id = Column(Integer, primary_key=True) #первичный ключ
     number = Column(Integer, default=1) 
     info = Column(String(255), nullable=False)
-    id_recipe = Column(Integer, ForeignKey("recipes.id"), nullable=False, default=1) #внешний ключ
+    id_recipe = Column(Integer, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False, default=1) #внешний ключ
 
-    recipe=relationship("Recipe", backref="steps") #обратная связь
-
+    #recipe=relationship("Recipe", backref="steps") #обратная связь #overlaps="steps"
+    recipe: Mapped["Recipe"] = relationship(back_populates="steps")

@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db" #строка подключения
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
@@ -18,3 +18,10 @@ def get_db(): #функция для открытия подключения к 
         yield db
     finally:
         db.close()
+
+class Base(DeclarativeBase):
+    def __repr__(self):
+        cols=[]
+        for col in self.__table__.columns.keys():
+            cols.append(f"{col}={getattr(self,col)}")
+        return f"<{self.__class__.__name__} {','.join(cols)}>"

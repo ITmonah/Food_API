@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+#joinedload - подходит для многие к одному, один к одному
+# - многие ко многим, один ко многим
+from sqlalchemy import and_, text, insert, select, func, cast, or_
+from sqlalchemy.orm import Session, joinedload, selectinload, contains_eager
 from typing import List
 import models
 from database import get_db
@@ -17,15 +20,33 @@ router = APIRouter(
 #получение списка рецептов
 @router.get('/', response_model=List[pyd.RecipeScheme])
 async def get_recipes(db:Session=Depends(get_db)):
-    recipes=db.query(models.Recipe).all()
-    return recipes
+    query = (
+        select(models.Recipe)
+        .options(
+        selectinload(models.Recipe.steps)
+        ))
+    res = db.execute(query)
+    ress=res.scalars().all()
+    return ress
+
+#выводятся только те рецепты, где есть шаги
+"""@router.get('/', response_model=List[pyd.RecipeScheme])
+async def get_recipes(db:Session=Depends(get_db)):
+    query = (
+        select(models.Recipe)
+        .join(models.Recipe.steps)
+        .options(contains_eager(models.Recipe.steps)) #вложенная структура, не табличная
+        )
+    res = db.execute(query)
+    ress=res.unique().scalars().all()
+    return ress"""
 
 #добавление рецепта
-@router.post('/', response_model=pyd.RecipeScheme)
-async def create_recipes(url:str= Depends(upload_file.save_file),recipe_input:pyd.RecipeCreate=Depends(), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+@router.post('/')
+async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db)):
     recipe_db=models.Recipe()
     recipe_db.name=recipe_input.name
-    recipe_db.face_img=url
+    #recipe_db.face_img=url
     #категория - одна
     category_db = db.query(models.Category).filter(models.Category.id==recipe_input.id_category).first()
     if category_db:
@@ -42,6 +63,7 @@ async def create_recipes(url:str= Depends(upload_file.save_file),recipe_input:py
     for id_mealtime in recipe_input.id_mealtime:
         mealtime_db = db.query(models.Mealtime).filter(models.Mealtime.id==id_mealtime).first()
         if mealtime_db:
+            #recipe_db.mealtime=mealtime_db
             recipe_db.mealtime.append(mealtime_db)
         else:
             raise HTTPException(status_code=404, detail="Время приёма пищи не найдено!")
@@ -55,7 +77,7 @@ async def create_recipes(url:str= Depends(upload_file.save_file),recipe_input:py
     recipe_db.cooking_time=recipe_input.cooking_time
     db.add(recipe_db)
     db.commit()
-    return recipe_db
+    return "Рецепт отправлен модератору!"
 
 #редактирование рецепта
 @router.put('/{recipe_id}', response_model=pyd.RecipeScheme)
