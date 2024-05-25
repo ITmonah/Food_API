@@ -34,6 +34,13 @@ async def get_recipes(db:Session=Depends(get_db)):
     ress=res.scalars().all()
     return ress
 
+@router.get("/{id}", response_model=pyd.RecipeScheme)
+async def get_recipes_one(id:int, db:Session=Depends(get_db)):
+    recipes_one=db.query(models.Recipe).filter(models.Recipe.id==id).first()
+    if not recipes_one:
+        raise HTTPException(status_code=404, detail="Рецепт не найден!")
+    return recipes_one
+
 #читаем рецепты пагинацией
 @router.get("/page/all", response_model=Page[pyd.RecipeScheme])
 async def get_recipes_all(db:Session=Depends(get_db)):

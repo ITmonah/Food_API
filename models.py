@@ -60,7 +60,7 @@ class Recipe(Base): #рецепты
 
     user=relationship("User", backref="recipes") #обратная связь
     category=relationship("Category", backref="recipes") #обратная связь
-    mealtime=relationship("Mealtime", secondary='mealtime_recipe', backref='recipes') #время приготовления
+    mealtime=relationship("Mealtime", secondary='mealtime_recipe', backref='recipes',order_by="Mealtime.id.asc()") #время приготовления
     ingredient=relationship("Ingredient", secondary='ingredient_recipe', backref='recipes') #ингредиенты
 
     steps: Mapped[list["Step"]]  = relationship(
