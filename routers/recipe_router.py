@@ -65,17 +65,12 @@ async def all_recipes(db: Session = Depends(get_db)):
     return paginate(db.query(models.Recipe).all())"""
 
 
-
-
-
 @router.get("/files/{img_name}")
 async def get_image(img_name:str, db:Session=Depends(get_db)):
     image_path = Path(f"files/{img_name}")
     if not image_path.is_file():
         return {"error": "Image not found on the server"}
     return FileResponse(image_path)
-
-
 
 #выводятся только те рецепты, где есть шаги
 """@router.get('/', response_model=List[pyd.RecipeScheme])
@@ -184,3 +179,16 @@ async def delete_recipes(recipe_id:int, db:Session=Depends(get_db),payload:dict=
     db.query(models.Additional_photo).filter(models.Additional_photo.id_recipe==recipe_id).delete()
     db.commit()
     return "Удаление рецепта прошло успешно!"
+
+#публикация рецепта
+@router.put('/published/{recipe_id}')
+async def published_recipes(recipe_id:int, db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
+    recipe_db=db.query(models.Recipe).filter(models.Recipe.id==recipe_id).first()
+    if not recipe_db:
+        raise HTTPException(status_code=404, detail="Рецепт не найден!")
+    if recipe_db.published == True:
+        return "Этот рецепт уже опубликован!"
+    else: 
+        recipe_db.published = True
+    db.commit()
+    return "Рецепт успешно опубликован!"
