@@ -13,13 +13,16 @@ import upload_file
 #модули для JWT токена
 import auth_utils
 from config import TokenInfo
+#модули для пагинации
+from fastapi_pagination import Page, LimitOffsetPage, paginate, add_pagination, limit_offset
+from fastapi_pagination.utils import disable_installed_extensions_check
 
 router = APIRouter(
     prefix="/recipe",
     tags=["recipe"],
 )
 
-#получение списка рецептов
+#получение полного списка рецептов
 @router.get('/', response_model=List[pyd.RecipeScheme])
 async def get_recipes(db:Session=Depends(get_db)):
     query = (
@@ -31,12 +34,48 @@ async def get_recipes(db:Session=Depends(get_db)):
     ress=res.scalars().all()
     return ress
 
+#читаем рецепты пагинацией
+@router.get("/page/all", response_model=Page[pyd.RecipeScheme])
+async def get_recipes_all(db:Session=Depends(get_db)):
+    recipes_db=db.query(models.Recipe).all()
+    return paginate(recipes_db)
+
+add_pagination(router)
+
+#вывод опубликованных рецептов
+@router.get("/page/true", response_model=Page[pyd.RecipeScheme])
+async def get_recipes_true(db:Session=Depends(get_db)):
+    recipes_true=db.query(models.Recipe).filter(models.Recipe.published==True).all()
+    return paginate(recipes_true)
+
+add_pagination(router)
+
+#вывод неопубликованных рецептов
+@router.get("/page/false", response_model=Page[pyd.RecipeScheme])
+async def get_recipes_false(db:Session=Depends(get_db)):
+    recipes_false=db.query(models.Recipe).filter(models.Recipe.published==False).all()
+    return paginate(recipes_false)
+
+add_pagination(router)
+
+"""#читаем рецепты пагинацией со смещением
+@router.get("/blog/limit-offset", response_model=LimitOffsetPage[pyd.RecipeScheme])
+async def all_recipes(db: Session = Depends(get_db)):
+    disable_installed_extensions_check()
+    return paginate(db.query(models.Recipe).all())"""
+
+
+
+
+
 @router.get("/files/{img_name}")
-async def get_image(img_name:str,db:Session=Depends(get_db)):
+async def get_image(img_name:str, db:Session=Depends(get_db)):
     image_path = Path(f"files/{img_name}")
     if not image_path.is_file():
         return {"error": "Image not found on the server"}
     return FileResponse(image_path)
+
+
 
 #выводятся только те рецепты, где есть шаги
 """@router.get('/', response_model=List[pyd.RecipeScheme])

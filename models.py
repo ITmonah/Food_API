@@ -56,6 +56,7 @@ class Recipe(Base): #рецепты
                         server_default=func.now())
     cooking_time=Column(Integer, nullable=False)
     views=Column(Integer, nullable=False,default=0)
+    published=Column(Boolean, nullable=False,default=0) #публикация
 
     user=relationship("User", backref="recipes") #обратная связь
     category=relationship("Category", backref="recipes") #обратная связь

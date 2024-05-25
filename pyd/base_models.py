@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from pydantic import EmailStr, BaseModel, Field,FileUrl #настройка валидации
+from pydantic import EmailStr, BaseModel, Field, FileUrl #настройка валидации
 
 class UserBase(BaseModel):
     id:int=Field(...,gt=0,example=228) #обязательно к заполнению
@@ -19,6 +19,7 @@ class RecipeBase(BaseModel):
     created_at:datetime=Field(...,example='2001-01-01 00:00:00')
     cooking_time:int=Field(..., gt=0, example=3) #время готовки
     views:int=Field(..., ge=0, example=3)
+    published:bool=Field(..., example=False) #публикация
     class Config:
         orm_mode=True #наша модель будет легко соедняться с бд
 
