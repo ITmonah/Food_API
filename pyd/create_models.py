@@ -25,16 +25,12 @@ class RecipeCreate(BaseModel):
     #id_user:int=Field(..., gt=0, example=10)
     cooking_time:int=Field(..., gt=0, example=2) #время готовки
     id_mealtime:List[int] = None #для добавления времени приготовления через запятую
-    id_ingredient:List[int] = None
 
 class IngredientCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Морковка")
 
 class System_of_calculationCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Кг")
-
-class Count(BaseModel):
-    count:int=Field(..., gt=0, example=10)
 
 class CategoryCreate(BaseModel):
     name:str=Field(...,max_length=255, min_length=1,example="Десерт")
@@ -56,3 +52,11 @@ class StepCreate(BaseModel):
 class Credentials(BaseModel):
     mail: EmailStr = Field(..., example='recipes221@mail.ru')
     pwd: str = Field(..., max_length=255, min_length=6, example='123456')
+
+class CountCreate(BaseModel):        
+    id_ingredient:int=Field(..., gt=0, example=10)
+    count:int=Field(..., gt=0, example=10)
+    id_system_of_calc:int=Field(..., gt=0, example=10)
+
+class ScoreCreate(BaseModel): 
+    pass

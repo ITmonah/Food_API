@@ -27,7 +27,6 @@ async def create_steps(step_input:List[pyd.StepCreate], db:Session=Depends(get_d
     for step in step_input:
         step_db=models.Step()
         step_db.number=(step_input.index(step)) + 1
-        #step_db.number=step.number
         step_db.info=step.info
         step_db.recipe=recipe_db
         db.add(step_db)

@@ -7,3 +7,5 @@ from .step_router import router as step_router
 from .sys_of_calc_router import router as sys_of_calc_router
 from .user_router import router as user_router
 from .photo_router import router as photo_router
+from .count_router import router as count_router
+from .score_router import router as score_router

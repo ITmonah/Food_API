@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from typing import List
 import models
 from database import get_db
@@ -16,7 +17,7 @@ router = APIRouter(
 #получение списка ингредиентов
 @router.get('/', response_model=List[pyd.IngredientBase])
 async def get_ingredients(db:Session=Depends(get_db)):
-    ingredients=db.query(models.Ingredient).all()
+    ingredients=db.query(models.Ingredient).order_by(models.Ingredient.name).all()
     return ingredients
 
 #добавление ингредиента

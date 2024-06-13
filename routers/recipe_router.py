@@ -22,6 +22,36 @@ router = APIRouter(
     tags=["recipe"],
 )
 
+#функция подсчёта лайков
+def likes_recipes(recipe,db:Session=Depends(get_db)):
+    recipes_likes=db.query(models.Score).filter(models.Score.id_recipe==recipe).filter(models.Score.like==True).all()
+    likes = recipes_likes.__len__()
+    return likes
+
+#функция подсчёта дизлайков
+def dizlikes_recipes(recipe,db:Session=Depends(get_db)):
+    recipes_dizlikes=db.query(models.Score).filter(models.Score.id_recipe==recipe).filter(models.Score.dizlike==True).all()
+    dizlikes = recipes_dizlikes.__len__()
+    return dizlikes
+
+#функция добавления рецептам лайков и дизлайков
+def for_recipes(recipe_db,db:Session=Depends(get_db)):
+    for recipe in recipe_db:
+        recipe.likes=likes_recipes(recipe.id,db)
+        recipe.dizlikes=dizlikes_recipes(recipe.id,db)
+    return recipe_db
+
+
+#вывод одного рецепта
+@router.get("/{id}", response_model=pyd.RecipeScheme)
+async def get_recipes_one(id:int, db:Session=Depends(get_db)):
+    recipes_one=db.query(models.Recipe).filter(models.Recipe.id==id).filter(models.Recipe.published==True).first()
+    if not recipes_one:
+        raise HTTPException(status_code=404, detail="Рецепт не найден!")
+    recipes_one.likes=likes_recipes(id,db)
+    recipes_one.dizlikes=dizlikes_recipes(id,db)
+    return recipes_one
+
 #получение полного списка рецептов
 @router.get('/', response_model=List[pyd.RecipeScheme])
 async def get_recipes(db:Session=Depends(get_db)):
@@ -32,19 +62,14 @@ async def get_recipes(db:Session=Depends(get_db)):
         ))
     res = db.execute(query)
     ress=res.scalars().all()
+    for_recipes(ress,db)
     return ress
-
-@router.get("/{id}", response_model=pyd.RecipeScheme)
-async def get_recipes_one(id:int, db:Session=Depends(get_db)):
-    recipes_one=db.query(models.Recipe).filter(models.Recipe.id==id).first()
-    if not recipes_one:
-        raise HTTPException(status_code=404, detail="Рецепт не найден!")
-    return recipes_one
 
 #читаем рецепты пагинацией
 @router.get("/page/all", response_model=Page[pyd.RecipeScheme])
 async def get_recipes_all(db:Session=Depends(get_db)):
     recipes_db=db.query(models.Recipe).all()
+    for_recipes(recipes_db,db)
     return paginate(recipes_db)
 
 add_pagination(router)
@@ -53,6 +78,7 @@ add_pagination(router)
 @router.get("/page/true", response_model=Page[pyd.RecipeScheme])
 async def get_recipes_true(db:Session=Depends(get_db)):
     recipes_true=db.query(models.Recipe).filter(models.Recipe.published==True).all()
+    for_recipes(recipes_true,db)
     return paginate(recipes_true)
 
 add_pagination(router)
@@ -61,39 +87,40 @@ add_pagination(router)
 @router.get("/page/false", response_model=Page[pyd.RecipeScheme])
 async def get_recipes_false(db:Session=Depends(get_db)):
     recipes_false=db.query(models.Recipe).filter(models.Recipe.published==False).all()
+    for_recipes(recipes_false,db)
     return paginate(recipes_false)
 
 add_pagination(router)
 
-"""#читаем рецепты пагинацией со смещением
-@router.get("/blog/limit-offset", response_model=LimitOffsetPage[pyd.RecipeScheme])
-async def all_recipes(db: Session = Depends(get_db)):
-    disable_installed_extensions_check()
-    return paginate(db.query(models.Recipe).all())"""
+#вывод опубликованных рецептов по категории и времени употребления через query
+@router.get("/page/true/category/", response_model=Page[pyd.RecipeScheme])
+async def get_recipes_true_category(name: str, db:Session=Depends(get_db)):
+    category_db=db.query(models.Category).filter(models.Category.name==name).first()
+    if not category_db:
+        mealtime_db=db.query(models.Mealtime).filter(models.Mealtime.name==name).first()
+        if not mealtime_db:
+            raise HTTPException(status_code=404, detail="Категория не найдена!")
+        mealtime_recipes_true=db.query(models.Recipe).filter(models.Recipe.published==True).filter(models.Recipe.mealtime.contains(mealtime_db)).all()
+        for_recipes(mealtime_recipes_true,db)
+        return paginate(mealtime_recipes_true)
+    category_recipes_true=db.query(models.Recipe).filter(models.Recipe.published==True).filter(models.Recipe.category==category_db).all()
+    for_recipes(category_recipes_true,db)
+    return paginate(category_recipes_true)
 
+add_pagination(router)
 
+#вывод картинки
 @router.get("/files/{img_name}")
 async def get_image(img_name:str, db:Session=Depends(get_db)):
     image_path = Path(f"files/{img_name}")
     if not image_path.is_file():
-        return {"error": "Image not found on the server"}
-    return FileResponse(image_path)
-
-#выводятся только те рецепты, где есть шаги
-"""@router.get('/', response_model=List[pyd.RecipeScheme])
-async def get_recipes(db:Session=Depends(get_db)):
-    query = (
-        select(models.Recipe)
-        .join(models.Recipe.steps)
-        .options(contains_eager(models.Recipe.steps)) #вложенная структура, не табличная
-        )
-    res = db.execute(query)
-    ress=res.unique().scalars().all()
-    return ress"""
+        return {"error": "Изображение не найдено!"}
+    return FileResponse(image_path) 
 
 #добавление рецепта
 @router.post('/')
-async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_db), payload:dict=Depends(auth_utils.auth_wrapper)):
+async def create_recipes(recipe_input:pyd.RecipeCreate, step_input:List[pyd.StepCreate], count_input:List[pyd.CountCreate], db:Session=Depends(get_db), payload:dict=Depends(auth_utils.auth_wrapper)):
+    #добавление данных в талицу Recipe
     user_db = db.query(models.User).filter(models.User.name==payload.get("username")).first() #находим зарегестрированного сейчас пользователя
     recipe_db=models.Recipe()
     recipe_db.name=recipe_input.name
@@ -109,31 +136,49 @@ async def create_recipes(recipe_input:pyd.RecipeCreate, db:Session=Depends(get_d
     for id_mealtime in recipe_input.id_mealtime:
         mealtime_db = db.query(models.Mealtime).filter(models.Mealtime.id==id_mealtime).first()
         if mealtime_db:
-            #recipe_db.mealtime=mealtime_db
             recipe_db.mealtime.append(mealtime_db)
         else:
             raise HTTPException(status_code=404, detail="Время приёма пищи не найдено!")
-    #ингредиенты  - несколько 
-    for id_ingredient in recipe_input.id_ingredient:
-        ingredient_db = db.query(models.Ingredient).filter(models.Ingredient.id==id_ingredient).first()
-        if ingredient_db:
-            recipe_db.ingredient.append(ingredient_db)
-        else:
-            raise HTTPException(status_code=404, detail="Ингредиент не найден!")
     recipe_db.cooking_time=recipe_input.cooking_time
     db.add(recipe_db)
+    #db.commit()
+
+    #добавление данных в таблицу Step
+    for step in step_input:
+        step_db=models.Step()
+        step_db.number=(step_input.index(step)) + 1
+        step_db.info=step.info
+        step_db.recipe=recipe_db
+        db.add(step_db)
+        #db.commit()
+
+    #добавление данных в таблицу Count
+    for count_int in count_input:
+        count_db=models.Count()
+        count_db.recipe=recipe_db #добавляю рецепт
+        ing_db=db.query(models.Ingredient).filter(models.Ingredient.id==count_int.id_ingredient).first() #получаем пользователя
+        if not ing_db:
+            raise HTTPException(status_code=404, detail="Ингредиент не найден!")
+        count_db.id_ingredient=ing_db.id
+        count_db.count=count_int.count
+        sys_db=db.query(models.System_of_calculation).filter(models.System_of_calculation.id==count_int.id_system_of_calc).first() #получаем пользователя
+        if not sys_db:
+            raise HTTPException(status_code=404, detail="Система исчисления не найдена!")
+        count_db.id_system_of_calc = sys_db.id
+        db.add(count_db)
+        #db.commit()
     db.commit()
     return "Рецепт отправлен модератору!"
 
 #добавление главного изображения рецепту
-@router.post('/img', response_model=pyd.RecipeScheme)
+@router.post('/img')
 async def create_photos(url:str= Depends(upload_file.save_file), db:Session=Depends(get_db),payload:dict=Depends(auth_utils.auth_wrapper)):
     user_db = db.query(models.User).filter(models.User.name==payload.get("username")).first() #получаем пользователя
     recipe_db = db.query(models.Recipe).filter(models.Recipe.id_user==user_db.id).order_by(models.Recipe.created_at.desc()).first() #находим рецепт, принадлежащий пользователю
     print(url)
     recipe_db.face_img=url
     db.commit()
-    return recipe_db
+    return "Изображение добавлено!"
 
 #редактирование рецепта
 @router.put('/{recipe_id}', response_model=pyd.RecipeScheme)

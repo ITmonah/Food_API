@@ -13,12 +13,12 @@ def save_file(file: UploadFile):
     print(file.filename)
     with open(f'files/{file.filename}', 'wb') as f:
         f.write(file.file.read())
-    url = str(f'http://127.0.0.1:8000/recipe/files/{file.filename}')
+    url = str(f'recipe/files/{file.filename}')
     return url
 
 
 def getim(filename):
-    if os.path.exists(f'http://127.0.0.1:8000/recipe/files/{filename}'):
-        return FileResponse(f'http://127.0.0.1:8000/recipe/files/{filename}')
+    if os.path.exists(f'recipe/files/{filename}'):
+        return FileResponse(f'recipe/files/{filename}')
     else: 
         return "Изображение отсутствует!"
