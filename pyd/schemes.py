@@ -13,6 +13,7 @@ class RecipeScheme(RecipeBase):
     counts:List[CountScheme]
     likes:int
     dizlikes:int
+    raiting:int
 
 class Additional_photoScheme(Additional_photoBase):
     recipe_photo:RecipeBase #связь с рецептами
@@ -25,3 +26,8 @@ class ScoreScheme(BaseModel):
     dislikes:int
     status_like:int
     status_dizlike:int
+
+class UserScheme(UserBase):
+    #user:UserBase 
+    count_r:int
+    raiting:int
